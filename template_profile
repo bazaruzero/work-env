@@ -1,0 +1,106 @@
+#!/bin/bash
+
+export ORG_NAME="#{ORG_NAME}"
+export WORKSPACE="#{PROJECT_ROOT_DIR}"
+export DEFAULT_PGUSER="#{DEFAULT_PGUSER}"
+
+
+credentials() {
+
+    unset PGUSER
+    read -p "Enter username for future database connections [${DEFAULT_PGUSER}]: " PGUSER
+    export PGUSER=${PGUSER:-$DEFAULT_PGUSER}
+
+    unset PGPASSWORD
+    while [[ -z ${PGPASSWORD} ]]; do
+        read -s -p "Enter password for \"${PGUSER}\" user: " PGPASSWORD
+        echo ""
+    done
+    export PGPASSWORD=${PGPASSWORD}
+}
+
+bash_prompt() {
+
+    export PS1='\[\033[0;32m\]$ORG_NAME> \[\033[0;33m\]\u@\h\[\033[00m\]:\w\$ '
+}
+
+env_aliases() {
+
+    export PSQLRC="${WORKSPACE}/settings/psqlrc"
+    alias ll='ls -ltr'
+    alias lll='ls -ltra'
+    alias cdws${ORG_NAME}='cd ${WORKSPACE}'
+    alias cdcert='cd ${WORKSPACE}/cert'
+    alias cdinventory='cd ${WORKSPACE}/inventory'
+    alias cdhr='cd ${WORKSPACE}/hr'
+    alias cdnotes='cd ${WORKSPACE}/notes'
+    alias cdlearning='cd ${WORKSPACE}/learning'
+    alias cdkeys='cd ${WORKSPACE}/keys'
+    alias cdsecrets='cd ${WORKSPACE}/secrets'
+    alias cdprojects='cd ${WORKSPACE}/projects'
+    alias cdtmp='cd ${WORKSPACE}/tmp'
+    alias cdsoft='cd ${WORKSPACE}/soft'
+    alias cdsql='cd ${WORKSPACE}/soft/sql'
+    alias cdsh='cd ${WORKSPACE}/soft/sh'
+    alias cdsettings='cd ${WORKSPACE}/settings'
+    alias cddownloads='cd ${WORKSPACE}/downloads'
+}
+
+env_java() {
+
+    export JAVA_DIR="${WORKSPACE}/soft/java"
+    export JAVA_HOME=$(find "${JAVA_DIR}" -maxdepth 1 -type d -name "jdk-*" | head -1)
+    #export PATH=${PATH}:${JAVA_HOME}/bin
+    alias java='${JAVA_HOME}/bin/java'
+    alias cdjava='cd ${JAVA_DIR}'
+    alias cdjavahome='cd ${JAVA_HOME}'
+}
+
+env_ashv() {
+
+    export ASHV_HOME="${WORKSPACE}/soft/ash-viewer"
+    export ASHV_LOGS="${ASHV_HOME}/logs"
+    export ASHV_JAVA_HOME="${JAVA_HOME}"
+    alias cdashv='cd ${ASHV_HOME}'
+    alias cdashvconfig='cd ${ASHV_HOME}/bin/configuration'
+    alias cdashvdb='cd ${ASHV_HOME}/bin/database'
+    alias cdashvlogs='cd ${ASHV_LOGS}'
+    alias ashv="cd ${ASHV_HOME}/bin && nohup ${ASHV_JAVA_HOME}/bin/java -Xmx1024m -Dsun.java2d.uiScale=1.0 -cp \"$ASHV_HOME/bin/*\" Main > $ASHV_LOGS/ashv_sess_\$(date +%Y%m%d)T\$(date +%H%M%S).log 2>&1 &"
+}
+
+env_psql() {
+
+    alias cdpsql='cd ${WORKSPACE}/soft/psql'
+    alias psql='${WORKSPACE}/soft/psql/bin/psql'
+}
+
+env_psql_dba_tools() {
+
+    alias cdtools='cd ${WORKSPACE}/soft/psql-dba-tools'
+}
+
+env_db_connections() {
+
+    local search_dir="${WORKSPACE}/inventory"
+
+    [[ ! -d "$search_dir" ]] && echo "Error: Directory not found" && return 1
+    
+    while IFS= read -r -d '' env_file; do
+        echo "  Sourcing: ${env_file#$search_dir/}"
+        source "$env_file"
+    done < <(find "$search_dir" -type f -name "*.env" -print0)
+}
+
+main() {
+
+    [[ ${SKIP_CREDS} != "yes" ]] && credentials
+    bash_prompt
+    env_aliases
+    env_java
+    env_ashv
+    env_psql
+    env_psql_dba_tools
+    env_db_connections
+}
+
+main
