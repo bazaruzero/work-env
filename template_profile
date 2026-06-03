@@ -74,6 +74,17 @@ env_psql() {
     alias psql='${WORKSPACE}/soft/psql/bin/psql'
 }
 
+
+env_perl() {
+
+    alias perl='${WORKSPACE}/soft/perl/bin/perl'
+}
+
+env_pgbadger() {
+
+    alias pgbadger='${WORKSPACE}/soft/pgbadger/bin/pgbadger'
+}
+
 env_psql_dba_tools() {
 
     alias cdtools='cd ${WORKSPACE}/soft/psql-dba-tools'
@@ -98,6 +109,8 @@ main() {
     env_aliases
     env_java
     env_ashv
+    env_perl
+    env_pgbadger
     env_psql
     env_psql_dba_tools
     env_db_connections

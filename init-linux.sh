@@ -118,7 +118,7 @@ create_symlinks() {
 
 # === create_profile_template ===
 
-create_profile_template() {
+create_profile() {
     local template_file="$(dirname "$0")/template_profile"
     local target_file="${PROJECT_ROOT_DIR}/settings/profile"
 
@@ -342,6 +342,99 @@ setup_jdbc() {
     echo "INFO: JDBC driver version \"${jdbc_version}\" placed into \"${jdbc_dir}\"."
 }
 
+# === setup_pgbadger ===
+
+setup_pgbadger() {
+    local pgbadger_dir="${PROJECT_ROOT_DIR}/soft/pgbadger"
+    local version="13.2"
+    local base_url="https://github.com/darold/pgbadger/archive/refs/tags"
+    local archive_name="v${version}.tar.gz"
+    local download_url="${base_url}/${archive_name}"
+    local archive_file="${pgbadger_dir}/${archive_name}"
+    local perl_bin="${PROJECT_ROOT_DIR}/soft/perl/bin/perl"
+
+    echo "INFO: Setting up pgBadger v${version} in \"${pgbadger_dir}\"."
+
+    if [[ ! -x "${perl_bin}" ]]; then
+        echo "ERROR: Portable Perl not found at ${perl_bin}."
+        echo "       Please run setup_perl first or ensure Perl is installed."
+        return 1
+    fi
+    echo "INFO: Found portable Perl at ${perl_bin}."
+
+    if [[ -f "${pgbadger_dir}/bin/pgbadger" ]]; then
+        echo "INFO: pgBadger already exists at \"${pgbadger_dir}/bin/pgbadger\"."
+        local current_version=$("${pgbadger_dir}/bin/pgbadger" --version 2>&1 | head -1 | grep -oP 'v\K[\d.]+')
+        echo "INFO: Found version v${current_version}. Skipping installation."
+        return 0
+    fi
+
+    if [[ ! -d "${pgbadger_dir}" ]]; then
+        mkdir -p "${pgbadger_dir}"
+        echo "INFO: Created directory \"${pgbadger_dir}\"."
+    fi
+
+    echo "INFO: Downloading pgBadger source code version ${version}..."
+    if command -v wget &> /dev/null; then
+        wget -q --show-progress -O "${archive_file}" "${download_url}"
+    elif command -v curl &> /dev/null; then
+        curl -# -L -o "${archive_file}" "${download_url}"
+    else
+        echo "ERROR: Neither wget nor curl is available. Please install one of them."
+        return 1
+    fi
+	
+    if [[ $? -ne 0 ]] || [[ ! -f "${archive_file}" ]]; then
+        echo "ERROR: Failed to download pgBadger source from ${download_url}"
+        return 1
+    fi
+    echo "INFO: Download completed successfully."
+
+    echo "INFO: Extracting archive..."
+    if ! command -v tar &> /dev/null; then
+        echo "ERROR: tar is not installed. Please install tar."
+        rm -f "${archive_file}"
+        return 1
+    fi
+    tar -xzf "${archive_file}" -C "${pgbadger_dir}"
+    if [[ $? -ne 0 ]]; then
+        echo "ERROR: Failed to extract archive."
+        rm -f "${archive_file}"
+        return 1
+    fi
+    rm -f "${archive_file}"
+
+    local source_dir="${pgbadger_dir}/pgbadger-${version}"
+
+    if [[ ! -d "${source_dir}" ]]; then
+        echo "ERROR: Could not find extracted source directory at ${source_dir}."
+        return 1
+    fi
+
+    echo "INFO: Configuring pgBadger with portable Perl..."
+    cd "${source_dir}"
+	
+    echo "INFO: Adjusting shebang to use portable Perl..."
+    sed -i "1s|^#!.*|#!${perl_bin}|" "${source_dir}/pgbadger"
+	
+    mkdir -p "${pgbadger_dir}/bin"
+    cp "${source_dir}/pgbadger" "${pgbadger_dir}/bin/"
+    
+    if [[ -d "${source_dir}/doc" ]]; then
+        mkdir -p "${pgbadger_dir}/share"
+        cp -r "${source_dir}/doc" "${pgbadger_dir}/share/"
+        echo "INFO: Documentation copied to \"${pgbadger_dir}/share/doc\"."
+    fi
+    
+    cd "${PROJECT_ROOT_DIR}"
+    rm -rf "${source_dir}"
+    chmod -R 750 "${pgbadger_dir}"
+	
+    echo "INFO: pgBadger successfully installed in \"${pgbadger_dir}\"."
+    echo "INFO: pgBadger version:"
+    "${pgbadger_dir}/bin/pgbadger" --version
+}
+
 # === setup_psql ===
 
 setup_psql() {
@@ -460,6 +553,101 @@ setup_psql() {
     echo "INFO: psql installed to: ${psql_base_dir}/bin/psql"
 }
 
+
+# === setup_perl ===
+
+setup_perl() {
+    local perl_dir="${PROJECT_ROOT_DIR}/soft/perl"
+    local version="5.40.0"
+    local download_url="https://www.cpan.org/src/5.0/perl-${version}.tar.gz"
+    local archive_file="${perl_dir}/perl-${version}.tar.gz"
+
+    echo "INFO: Setting up portable Perl in \"${perl_dir}\"."
+
+    if [[ -f "${perl_dir}/bin/perl" ]]; then
+        echo "INFO: Perl already exists at \"${perl_dir}/bin/perl\"."
+        local perl_version=$("${perl_dir}/bin/perl" -v | grep -oP '(?<=This is perl 5, version )\d+,\s*version \K\d+' | head -1)
+        echo "INFO: Found version v${perl_version}. Skipping installation."
+        return 0
+    fi
+
+    if [[ ! -d "${perl_dir}" ]]; then
+        mkdir -p "${perl_dir}"
+        echo "INFO: Created directory \"${perl_dir}\"."
+    fi
+
+    echo "INFO: Downloading Perl source code version ${version}..."
+    if command -v wget &> /dev/null; then
+        wget -O "${archive_file}" "${download_url}"
+    elif command -v curl &> /dev/null; then
+        curl -L -o "${archive_file}" "${download_url}"
+    else
+        echo "ERROR: Neither wget nor curl is available. Please install one of them."
+        return 1
+    fi
+
+    if [[ $? -ne 0 ]] || [[ ! -f "${archive_file}" ]]; then
+        echo "ERROR: Failed to download Perl source from ${download_url}"
+        return 1
+    fi
+    echo "INFO: Download completed successfully."
+
+    echo "INFO: Extracting archive..."
+    if ! command -v tar &> /dev/null; then
+        echo "ERROR: tar is not installed. Please install tar to extract the archive."
+        rm -f "${archive_file}"
+        return 1
+    fi
+    tar -xzf "${archive_file}" -C "${perl_dir}"
+    if [[ $? -ne 0 ]]; then
+        echo "ERROR: Failed to extract archive."
+        rm -f "${archive_file}"
+        return 1
+    fi
+
+    rm -f "${archive_file}"
+	
+    local source_dir="${perl_dir}/perl-${version}"
+    if [[ ! -d "${source_dir}" ]]; then
+        echo "ERROR: Could not find extracted source directory at ${source_dir}."
+        return 1
+    fi
+
+    echo "INFO: Configuring Perl for portable installation in \"${perl_dir}\"..."
+    cd "${source_dir}"
+    ./Configure -des -Dprefix="${perl_dir}" -Dusethreads -Duserelocatableinc
+
+    if [[ $? -ne 0 ]]; then
+        echo "ERROR: Configuration failed."
+        cd "${PROJECT_ROOT_DIR}"
+        return 1
+    fi
+
+    echo "INFO: Compiling Perl (this may take a few minutes)..."
+    make
+    if [[ $? -ne 0 ]]; then
+        echo "ERROR: Compilation failed."
+        cd "${PROJECT_ROOT_DIR}"
+        return 1
+    fi
+
+    echo "INFO: Installing Perl to \"${perl_dir}\"..."
+    make install
+    if [[ $? -ne 0 ]]; then
+        echo "ERROR: Installation failed."
+        cd "${PROJECT_ROOT_DIR}"
+        return 1
+    fi
+
+    cd "${PROJECT_ROOT_DIR}"
+    rm -rf "${source_dir}"
+    chmod -R 750 "${perl_dir}"
+
+    echo "INFO: Perl successfully installed in \"${perl_dir}\"."
+    echo "INFO: Perl version:"
+    "${perl_dir}/bin/perl" -v
+}
+
 # === setup_psql_dba_tools ===
 
 setup_psql_dba_tools() {
@@ -558,11 +746,13 @@ main() {
     create_dir_structure
     create_symlinks
     create_readmes
-    create_profile_template
+    create_profile
     create_psqlrc
     setup_ash_viewer
     setup_java
     setup_jdbc
+    setup_perl
+    setup_pgbadger
     setup_psql
     setup_psql_dba_tools
     update_bashrc
