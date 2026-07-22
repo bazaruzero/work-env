@@ -750,14 +750,14 @@ main() {
     create_readmes
     create_profile
     create_psqlrc
-    #setup_ash_viewer
-    #setup_java
-    #setup_jdbc
-    #setup_perl
-    #setup_pgbadger
-    #setup_psql
-    #setup_psql_dba_tools
-    #update_bashrc
+    setup_ash_viewer
+    setup_java
+    setup_jdbc
+    setup_perl
+    setup_pgbadger
+    setup_psql
+    setup_psql_dba_tools
+    update_bashrc
 }
 
 # +--------------------------------------------------------------------------+
