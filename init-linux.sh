@@ -32,6 +32,49 @@ SYMLINKS=(
 # |                               FUNCTIONS                                  |
 # +--------------------------------------------------------------------------+
 
+# === check_internet ===
+
+check_internet() {
+    local test_urls=(
+        "https://github.com"
+        "https://ftp.postgresql.org"
+        "https://www.cpan.org"
+        "https://jdbc.postgresql.org"
+    )
+    local timeout=10
+
+    echo "INFO: Checking internet connection..."
+
+    if ! command -v wget &> /dev/null && ! command -v curl &> /dev/null; then
+        echo "ERROR: Neither wget nor curl is available. Cannot check internet connection."
+        echo "       Please install wget or curl first."
+        exit 1
+    fi
+
+    for url in "${test_urls[@]}"; do
+        if command -v wget &> /dev/null; then
+            if wget -q --spider --timeout="${timeout}" "${url}" 2>/dev/null; then
+                echo "INFO: Internet connection available (reached ${url})."
+                return 0
+            fi
+        elif command -v curl &> /dev/null; then
+            if curl -s -o /dev/null --max-time "${timeout}" --head "${url}" 2>/dev/null; then
+                echo "INFO: Internet connection available (reached ${url})."
+                return 0
+            fi
+        fi
+    done
+
+    echo "ERROR: No internet connection detected."
+    echo "       The following hosts were unreachable:"
+    for url in "${test_urls[@]}"; do
+        echo "         - ${url}"
+    done
+    echo "       Most setup_* functions require internet access to download files."
+    echo "       Please check your network connection and proxy settings, then re-run the script."
+    exit 1
+}
+
 # === create_project_root_dir ===
 
 create_project_root_dir() {
@@ -750,6 +793,7 @@ main() {
     create_readmes
     create_profile
     create_psqlrc
+    check_internet
     setup_ash_viewer
     setup_java
     setup_jdbc
