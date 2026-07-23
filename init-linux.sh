@@ -108,7 +108,8 @@ create_dir_structure() {
         fi
     done
 
-    cp "$(dirname "$0")/example.env" ${PROJECT_ROOT_DIR}/inventory/
+    cp "$(dirname "$0")/examples/example.env" ${PROJECT_ROOT_DIR}/inventory/
+    cp "$(dirname "$0")/scripts/create_connection.sh ${PROJECT_ROOT_DIR}/soft/sh
 }
 
 # === create_readme ===
@@ -164,7 +165,7 @@ create_symlinks() {
 # === create_profile_template ===
 
 create_profile() {
-    local template_file="$(dirname "$0")/template_profile"
+    local template_file="$(dirname "$0")/template/template_profile"
     local target_file="${PROJECT_ROOT_DIR}/settings/profile"
 
     echo "INFO: Creating profile from template."
@@ -188,7 +189,7 @@ create_profile() {
 # === create_psqlrc ===
 
 create_psqlrc() {
-    local template_file="$(dirname "$0")/template_psqlrc"
+    local template_file="$(dirname "$0")/template/template_psqlrc"
     local target_file="${PROJECT_ROOT_DIR}/settings/psqlrc"
 
     echo "INFO: Creating psqlrc from template."

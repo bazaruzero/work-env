@@ -29,7 +29,7 @@ env_aliases() {
     export PSQLRC="${WORKSPACE}/settings/psqlrc"
     alias ll='ls -ltr'
     alias lll='ls -ltra'
-    alias cdws${ORG_NAME}='cd ${WORKSPACE}'
+    alias cdws_${ORG_NAME}='cd ${WORKSPACE}'
     alias cdcert='cd ${WORKSPACE}/cert'
     alias cdinventory='cd ${WORKSPACE}/inventory'
     alias cdhr='cd ${WORKSPACE}/hr'
@@ -44,6 +44,7 @@ env_aliases() {
     alias cdsh='cd ${WORKSPACE}/soft/sh'
     alias cdsettings='cd ${WORKSPACE}/settings'
     alias cddownloads='cd ${WORKSPACE}/downloads'
+    alias newconn='${WORKSPACE}/soft/sh/create_connection.sh'
 }
 
 env_java() {
