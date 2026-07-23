@@ -20,7 +20,7 @@ STRUCTURE=(
     "projects:Project-specific files, documents, reports, etc.::"
     "secrets:Sensitive credentials, passwords, and secrets management files.::"
     "settings:Configuration files, environment templates, and tool settings.::"
-    "soft:Portable software tools, utilities and scripts.::sh,sql,ash-viewer,putty,java,keepass2"
+    "soft:Portable software tools, utilities and scripts.::sh,sql,putty,keepass2"
     "tmp:Location for temporary files.::"
 )
 

@@ -49,7 +49,9 @@ env_aliases() {
 env_java() {
 
     export JAVA_DIR="${WORKSPACE}/soft/java"
-    export JAVA_HOME=$(find "${JAVA_DIR}" -maxdepth 1 -type d -name "jdk-*" | head -1)
+    if [[ -d ${JAVA_DIR} ]]; then
+        export JAVA_HOME=$(find "${JAVA_DIR}" -maxdepth 1 -type d -name "jdk-*" | head -1)
+    fi
     #export PATH=${PATH}:${JAVA_HOME}/bin
     alias java='${JAVA_HOME}/bin/java'
     alias cdjava='cd ${JAVA_DIR}'
@@ -97,7 +99,7 @@ env_db_connections() {
     [[ ! -d "$search_dir" ]] && echo "Error: Directory not found" && return 1
     
     while IFS= read -r -d '' env_file; do
-        echo "  Sourcing: ${env_file#$search_dir/}"
+        echo "Sourcing: ${env_file#$search_dir/}"
         source "$env_file"
     done < <(find "$search_dir" -type f -name "*.env" -print0)
 }
