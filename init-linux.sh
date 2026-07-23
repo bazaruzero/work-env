@@ -109,7 +109,7 @@ create_dir_structure() {
     done
 
     cp "$(dirname "$0")/examples/example.env" ${PROJECT_ROOT_DIR}/inventory/
-    cp "$(dirname "$0")/scripts/create_connection.sh ${PROJECT_ROOT_DIR}/soft/sh
+    cp "$(dirname "$0")/scripts/create_connection.sh" ${PROJECT_ROOT_DIR}/soft/sh
 }
 
 # === create_readme ===
