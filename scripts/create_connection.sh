@@ -6,7 +6,7 @@
 
 INVENTORY_DIR="${WORKSPACE}/inventory"
 DEFAULT_PRIVATE_KEY="${WORKSPACE}/keys/private/id_rsa"
-PSQL_BIN="${WORKSPACE}/soft/psql/bin/psql"
+PSQL_BIN="\${WORKSPACE}/soft/psql/bin/psql"
 
 # +--------------------------------------------------------------------------+
 # |                               FUNCTIONS                                  |
@@ -155,13 +155,13 @@ build_db_alias() {
     if [[ "${user_name}" == "${DEFAULT_PGUSER}" ]]; then
         echo "INFO: User \"${user_name}\" matches DEFAULT_PGUSER." >&2
         echo "INFO: Password will be taken from \${PGPASSWORD} at runtime." >&2
-        local alias_value="\${WORKSPACE}/soft/psql/bin/psql -q -h ${server_name} -p ${port} -d ${db_name} -U \${PGUSER}"
+        local alias_value="${PSQL_BIN} -q -h ${server_name} -p ${port} -d ${db_name} -U \${PGUSER}"
         echo "alias ${alias_name}=\"${alias_value}\""
     else
         echo "INFO: User \"${user_name}\" differs from DEFAULT_PGUSER (\"${DEFAULT_PGUSER}\")." >&2
         local password
         password=$(ask_password "Enter password for \"${user_name}\"")
-        local inner="PGPASSWORD=\"${password}\" \${WORKSPACE}/soft/psql/bin/psql -q -h ${server_name} -p ${port} -d ${db_name} -U \"${user_name}\""
+        local inner="PGPASSWORD=\"${password}\" ${PSQL_BIN} -q -h ${server_name} -p ${port} -d ${db_name} -U \"${user_name}\""
         echo "alias ${alias_name}='bash -c '\''${inner}'\'"
     fi
 }
